@@ -5,13 +5,13 @@ Loads NPC data into Redis with vector embeddings for semantic search.
 
 import json
 import os
+
 import numpy as np
 import redis
 from dotenv import load_dotenv
+from openai import OpenAI
 from redis.commands.search.field import TagField, TextField, VectorField
 from redis.commands.search.index_definition import IndexDefinition, IndexType
-from redis.commands.search.query import Query
-from sentence_transformers import SentenceTransformer
 
 # --- Configuration ---
 load_dotenv()
@@ -20,7 +20,8 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 INDEX_NAME = "idx:npcs"
 NPC_PREFIX = "npc:"
-VECTOR_DIM = 768  # msmarco-distilbert-base-v4 output dimension
+VECTOR_DIM = 1536  # OpenAI text-embedding-3-small output dimension
+EMBEDDING_MODEL = "text-embedding-3-small"
 
 # --- Connect to Redis ---
 # Note: decode_responses=False for binary vector data
@@ -40,9 +41,17 @@ with open(os.path.join(project_dir, "data/npcs.json"), "r") as f:
 
 print(f"Loaded {len(npcs)} NPCs")
 
-# --- Initialize Embedding Model ---
-print("Loading embedding model (this may take a moment)...")
-embedder = SentenceTransformer("msmarco-distilbert-base-v4")
+# --- Initialize OpenAI Client ---
+openai_client = OpenAI()
+
+
+def get_embeddings(texts: list[str]) -> list[list[float]]:
+    """Get embeddings for a list of texts using OpenAI API."""
+    response = openai_client.embeddings.create(
+        model=EMBEDDING_MODEL,
+        input=texts,
+    )
+    return [item.embedding for item in response.data]
 
 # --- Create Embeddings ---
 # Combine description + lore + dialogue + tips for richer embeddings
@@ -55,9 +64,9 @@ def create_embedding_text(npc):
     ]
     return " ".join(parts)
 
-print("Generating embeddings...")
+print("Generating embeddings via OpenAI API...")
 embedding_texts = [create_embedding_text(npc) for npc in npcs]
-embeddings = embedder.encode(embedding_texts).astype(np.float32)
+embeddings = np.array(get_embeddings(embedding_texts), dtype=np.float32)
 
 # --- Store NPCs in Redis ---
 print("Storing NPCs in Redis...")

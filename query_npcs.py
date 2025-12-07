@@ -3,11 +3,12 @@ Query Clair Obscur: Expedition 33 data from Redis Vector Database
 """
 
 import os
+
 import numpy as np
 import redis
 from dotenv import load_dotenv
+from openai import OpenAI
 from redis.commands.search.query import Query
-from sentence_transformers import SentenceTransformer
 
 # --- Configuration ---
 load_dotenv()
@@ -15,13 +16,23 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 INDEX_NAME = "idx:npcs"
-VECTOR_DIM = 768
+VECTOR_DIM = 1536  # OpenAI text-embedding-3-small output dimension
+EMBEDDING_MODEL = "text-embedding-3-small"
 
 # --- Connect ---
-client = redis.Redis(
+redis_client = redis.Redis(
     host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, decode_responses=True
 )
-embedder = SentenceTransformer("msmarco-distilbert-base-v4")
+openai_client = OpenAI()
+
+
+def get_embedding(text: str) -> list[float]:
+    """Get embedding for a single text using OpenAI API."""
+    response = openai_client.embeddings.create(
+        model=EMBEDDING_MODEL,
+        input=text,
+    )
+    return response.data[0].embedding
 
 
 def semantic_search(query_text, top_k=3, filter_expr="*"):
@@ -36,7 +47,7 @@ def semantic_search(query_text, top_k=3, filter_expr="*"):
     Returns:
         List of matching entries with scores
     """
-    query_embedding = embedder.encode([query_text])[0].astype(np.float32)
+    query_embedding = np.array(get_embedding(query_text), dtype=np.float32)
 
     query = (
         Query(f"({filter_expr})=>[KNN {top_k} @embedding $query_vec AS score]")
@@ -47,7 +58,7 @@ def semantic_search(query_text, top_k=3, filter_expr="*"):
         .dialect(2)
     )
 
-    results = client.ft(INDEX_NAME).search(
+    results = redis_client.ft(INDEX_NAME).search(
         query, {"query_vec": query_embedding.tobytes()}
     )
 
@@ -66,7 +77,7 @@ def filter_search(filter_expr):
         "@race:{Secret}"
     """
     query = Query(filter_expr).return_fields("name", "role", "region", "drops")
-    return client.ft(INDEX_NAME).search(query).docs
+    return redis_client.ft(INDEX_NAME).search(query).docs
 
 
 def get_entry(entry_id):
@@ -90,7 +101,7 @@ def get_entry(entry_id):
         "resistance",
         "how_to_beat_tips",
     ]
-    values = client.hmget(f"npc:{entry_id}", fields)
+    values = redis_client.hmget(f"npc:{entry_id}", fields)
     return {k: v for k, v in zip(fields, values) if v}
 
 

@@ -4,30 +4,38 @@ Loads NPC data into Redis with vector embeddings for semantic search.
 """
 
 import json
+import os
 import numpy as np
 import redis
+from dotenv import load_dotenv
 from redis.commands.search.field import TagField, TextField, VectorField
 from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
 # --- Configuration ---
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
+load_dotenv()
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 INDEX_NAME = "idx:npcs"
 NPC_PREFIX = "npc:"
 VECTOR_DIM = 768  # msmarco-distilbert-base-v4 output dimension
 
 # --- Connect to Redis ---
 # Note: decode_responses=False for binary vector data
-client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
+client = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    decode_responses=False
+)
 
 print("Connected to Redis")
 
 # --- Load NPC Data ---
-import os
-script_dir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(script_dir, "data/npcs.json"), "r") as f:
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(project_dir, "data/npcs.json"), "r") as f:
     npcs = json.load(f)
 
 print(f"Loaded {len(npcs)} NPCs")
@@ -37,12 +45,13 @@ print("Loading embedding model (this may take a moment)...")
 embedder = SentenceTransformer("msmarco-distilbert-base-v4")
 
 # --- Create Embeddings ---
-# Combine description + lore + dialogue for richer embeddings
+# Combine description + lore + dialogue + tips for richer embeddings
 def create_embedding_text(npc):
     parts = [
         npc.get("description", ""),
         npc.get("lore", ""),
-        npc.get("dialogue", "")
+        npc.get("dialogue", ""),
+        npc.get("how_to_beat_tips", "")
     ]
     return " ".join(parts)
 
@@ -72,7 +81,10 @@ for npc, embedding in zip(npcs, embeddings):
         "drops": ",".join(npc["drops"]) if npc["drops"] else "",
         "description": npc["description"],
         "lore": npc["lore"],
-        "dialogue": npc["dialogue"],
+        "dialogue": npc.get("dialogue", ""),
+        "weakness": npc.get("weakness", ""),
+        "resistance": npc.get("resistance", ""),
+        "how_to_beat_tips": npc.get("how_to_beat_tips", ""),
         "embedding": embedding.tobytes()  # Store as raw bytes
     }
 
@@ -104,6 +116,9 @@ schema = (
     TagField("quest"),
     TagField("is_hostile"),
     TagField("becomes_hostile"),
+    TextField("weakness"),
+    TextField("resistance"),
+    TextField("how_to_beat_tips"),
     VectorField(
         "embedding",
         "FLAT",

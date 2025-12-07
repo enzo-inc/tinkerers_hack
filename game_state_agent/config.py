@@ -12,7 +12,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL_NAME = "gpt-5.1-2025-11-13"
 
 # Screenshot interval in seconds
-CAPTURE_INTERVAL = 5
+CAPTURE_INTERVAL = 2
 
 # Redis configuration (loaded from .env via existing load_dotenv call)
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")

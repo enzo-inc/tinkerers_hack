@@ -3,14 +3,14 @@
 import sys
 import os
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-from src.ptt import PTTHandler
-from src.audio import AudioRecorder, AudioPlayer
-from src.screenshot import ScreenCapture
-from src.stt import SpeechToText
-from src.tts import TextToSpeech
-from src.coach import Coach
+from voice_agent.src.ptt import PTTHandler
+from voice_agent.src.audio import AudioRecorder, AudioPlayer
+from voice_agent.src.screenshot import ScreenCapture
+from voice_agent.src.stt import SpeechToText
+from voice_agent.src.tts import TextToSpeech
+from voice_agent.src.coach import Coach
 
 
 class GamingCoach:
@@ -121,8 +121,8 @@ class GamingCoach:
 
 def main():
     """Entry point."""
-    # Load environment variables
-    load_dotenv()
+    # Load environment variables from root .env
+    load_dotenv(find_dotenv())
 
     # Check for required env vars
     missing = []

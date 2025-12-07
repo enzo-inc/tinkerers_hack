@@ -1,19 +1,65 @@
-# Elden Ring Game State Agent
+# Tinkerers Hack - Gaming AI Agents
 
-An AI agent that understands your Elden Ring game state using Redis as a vector database.
+Two AI agents for gaming: a voice coach and a game state tracker, plus Redis-based NPC knowledge.
 
-## Project Structure
+## Quick Start
 
+```bash
+# Install dependencies
+uv sync
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your API keys
 ```
-├── redis_setup/          # Redis vector database setup
-│   ├── data/npcs.json    # NPC seed data
-│   └── setup_redis.py    # Populates Redis with embeddings
-├── game_state_agent/     # Game state agent (TBD)
-├── query_npcs.py         # Query utilities
-└── README.md
+
+## Running the Agents
+
+### Voice Agent
+
+Push-to-talk voice assistant. Hold Right Option, speak, release to get a spoken response.
+
+```bash
+uv run voice-agent
 ```
 
-## Prerequisites
+| Action | Key |
+|--------|-----|
+| Start recording | Hold **Right Option** |
+| Get response | Release **Right Option** |
+| Quit | Press **ESC** |
+
+### Game State Agent
+
+Tracks game state by analyzing screenshots periodically.
+
+```bash
+uv run game-state
+```
+
+Press `Ctrl+C` to stop.
+
+### Running Both Simultaneously
+
+Open two terminal windows and run each agent:
+
+```bash
+# Terminal 1
+uv run game-state
+
+# Terminal 2
+uv run voice-agent
+```
+
+Or run both in one terminal (game-state in background):
+
+```bash
+uv run game-state & uv run voice-agent
+```
+
+## Redis NPC Database
+
+### Prerequisites
 
 **Redis Server** must be running locally:
 
@@ -23,21 +69,14 @@ brew install redis
 brew services start redis
 ```
 
-## Setup
+### Setup
 
 ```bash
-# Install dependencies
-uv sync
-
 # Populate the Redis database
 uv run python redis_setup/setup_redis.py
 ```
 
-## Redis Setup
-
-The `redis_setup/` folder contains everything needed to populate Redis with Elden Ring NPC data.
-
-## Query Examples
+### Query Examples
 
 ```bash
 uv run python -i query_npcs.py
@@ -75,4 +114,53 @@ NPCs in `redis_setup/data/npcs.json` have:
 Edit `redis_setup/data/npcs.json` and re-run:
 ```bash
 uv run python redis_setup/setup_redis.py
+```
+
+## Requirements
+
+- Python 3.13+
+- macOS (for Right Option key detection in voice agent)
+- OpenAI API key
+- ElevenLabs API key (for voice agent)
+- Redis (for NPC database)
+
+### macOS Permissions
+
+Your terminal app needs:
+- **Accessibility** permission (System Settings > Privacy & Security > Accessibility)
+- **Microphone** permission (System Settings > Privacy & Security > Microphone)
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+| Variable | Required By | Description |
+|----------|-------------|-------------|
+| `OPENAI_API_KEY` | Both | OpenAI API key |
+| `ELEVENLABS_API_KEY` | Voice Agent | ElevenLabs API key |
+
+## Project Structure
+
+```
+game_state_agent/     # Game state tracking agent
+  main.py             # Entry point
+  analyzer.py         # LLM screenshot analysis
+  capture.py          # Screen capture
+  state_manager.py    # State tracking
+
+voice_agent/          # Voice coach agent
+  main.py             # Entry point / orchestrator
+  src/
+    ptt.py            # Push-to-talk handler
+    audio.py          # Recording & playback
+    screenshot.py     # Screen capture
+    stt.py            # Speech-to-text
+    tts.py            # Text-to-speech
+    coach.py          # LLM coach
+
+redis_setup/          # Redis vector database setup
+  data/npcs.json      # NPC seed data
+  setup_redis.py      # Populates Redis with embeddings
+
+query_npcs.py         # Query utilities
 ```

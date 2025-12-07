@@ -1,0 +1,31 @@
+[project]
+name = "tinkerers-hack"
+version = "0.1.0"
+description = "Gaming AI agents - voice coach and game state tracker"
+requires-python = ">=3.13"
+dependencies = [
+    # Shared
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "mss>=9.0.0",
+    "pillow>=10.0.0",
+    # Game state agent
+    "pydantic>=2.0.0",
+    # Voice agent
+    "pynput>=1.7.6",
+    "sounddevice>=0.4.6",
+    "numpy>=1.26.0",
+    "soundfile>=0.12.1",
+    "elevenlabs>=1.0.0",
+]
+
+[project.scripts]
+game-state = "game_state_agent.main:main"
+voice-agent = "voice_agent.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["game_state_agent", "voice_agent"]

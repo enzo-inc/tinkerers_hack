@@ -142,6 +142,32 @@ Create a `.env` file in the project root:
 |----------|-------------|-------------|
 | `OPENAI_API_KEY` | Both | OpenAI API key |
 | `ELEVENLABS_API_KEY` | Voice Agent | ElevenLabs API key |
+| `LOGFIRE_TOKEN` | Voice Agent | Logfire token (or run `uv run logfire auth`) |
+
+## Observability
+
+The voice agent is instrumented with [Pydantic Logfire](https://logfire.pydantic.dev) for tracing and observability.
+
+### Setup
+
+```bash
+# Authenticate with Logfire (first time only)
+uv run logfire auth
+```
+
+Or set `LOGFIRE_TOKEN` in your `.env` file.
+
+### View Traces
+
+After running the voice agent, view traces at https://logfire.pydantic.dev
+
+Traces include:
+- Full voice interaction flow timing
+- OpenAI API calls (chat completions, embeddings)
+- Redis operations
+- ElevenLabs STT/TTS calls
+- Semantic cache hits/misses
+- Screenshot capture timing
 
 ## Project Structure
 

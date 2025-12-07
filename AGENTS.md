@@ -4,6 +4,7 @@
 
 ```bash
 uv sync                              # Install dependencies
+uv run logfire auth                  # Authenticate with Logfire (first time only)
 uv run game-state                    # Run game state agent
 uv run voice-agent                   # Run voice agent
 uv run python redis_setup/setup_redis.py  # Setup Redis NPC database
@@ -20,9 +21,10 @@ uv run python -i query_npcs.py       # Interactive NPC queries
 - **Docstrings**: Module-level required, Google-style for classes/functions
 - **Error handling**: Raise `ValueError` for invalid inputs, let API errors propagate
 - **Env vars**: Load via `python-dotenv`, check required vars at startup with clear error messages
+- **Observability**: Use `logfire` for tracing. Use `@logfire.instrument()` decorator for functions, `logfire.span()` for blocks, `logfire.info/warn/error/exception()` for logs
 
 ## Project Structure
 
 - `game_state_agent/` - Screenshot analysis, game state tracking (Pydantic models)
-- `voice_agent/` - PTT voice assistant (imports as `voice_agent.src.*`)
+- `voice_agent/` - PTT voice assistant (imports as `voice_agent.src.*`), instrumented with Logfire
 - `redis_setup/` - NPC vector database setup (standalone script)

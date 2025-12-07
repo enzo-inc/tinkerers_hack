@@ -30,7 +30,6 @@ class TextOverlay:
         corner_radius: float = 10.0,
         margin: int = 20,
     ):
-    """Text overlay for displaying spoken responses on screen."""
         """
         Initialize the text overlay.
 

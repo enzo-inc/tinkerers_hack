@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="npc.jpg" alt="Logo" width="400">
+</p>
+
 # Tinkerers Hack - Gaming AI Agents
 
 Two AI agents for gaming: a voice coach and a game state tracker, plus Redis-based NPC knowledge.

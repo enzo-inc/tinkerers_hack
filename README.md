@@ -79,31 +79,35 @@ uv run python redis_setup/setup_redis.py
 ### Query Examples
 
 ```bash
+# Run example queries
+uv run query-npcs
+
+# Interactive mode
 uv run python -i query_npcs.py
 ```
 
 ```python
-from query_npcs import semantic_search, filter_search, get_npc
+from query_npcs import semantic_search, filter_search, get_entry
 
 # Semantic search - natural language queries
-semantic_search("tragic warrior bound by fate")
-semantic_search("trickster who deceives travelers")
+semantic_search("boss with shields and flowers")
+semantic_search("how to cross the sea")
 
 # Filter by metadata
-filter_search("@region:{Limgrave}")
+filter_search("@region:{The Continent}")
 filter_search("@role:{Merchant}")
-filter_search("@race:{Demigod}")
+filter_search("@race:{Boss}")
 
 # Combined: semantic + filter
-semantic_search("powerful warrior", filter_expr="@region:{Limgrave}")
+semantic_search("secret items", filter_expr="@region:{The Continent}")
 
-# Get specific NPC by ID
-get_npc("blaidd")
+# Get specific entry by ID
+get_entry("goblu")
 ```
 
 ### NPC Data Schema
 
-NPCs in `redis_setup/data/npcs.json` have:
+NPCs in `data/npcs.json` have:
 - `name`, `race`, `role`, `region`
 - `locations`, `affiliation`, `quest`
 - `description`, `lore`, `dialogue`
@@ -111,7 +115,7 @@ NPCs in `redis_setup/data/npcs.json` have:
 
 ### Adding NPCs
 
-Edit `redis_setup/data/npcs.json` and re-run:
+Edit `data/npcs.json` and re-run:
 ```bash
 uv run python redis_setup/setup_redis.py
 ```

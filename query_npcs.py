@@ -19,10 +19,7 @@ VECTOR_DIM = 768
 
 # --- Connect ---
 client = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    password=REDIS_PASSWORD,
-    decode_responses=True
+    host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, decode_responses=True
 )
 embedder = SentenceTransformer("msmarco-distilbert-base-v4")
 
@@ -44,13 +41,14 @@ def semantic_search(query_text, top_k=3, filter_expr="*"):
     query = (
         Query(f"({filter_expr})=>[KNN {top_k} @embedding $query_vec AS score]")
         .sort_by("score")
-        .return_fields("score", "name", "race", "role", "region", "description", "how_to_beat_tips")
+        .return_fields(
+            "score", "name", "race", "role", "region", "description", "how_to_beat_tips"
+        )
         .dialect(2)
     )
 
     results = client.ft(INDEX_NAME).search(
-        query,
-        {"query_vec": query_embedding.tobytes()}
+        query, {"query_vec": query_embedding.tobytes()}
     )
 
     return results.docs
@@ -73,9 +71,25 @@ def filter_search(filter_expr):
 
 def get_entry(entry_id):
     """Get a specific entry by ID (excludes binary embedding field)."""
-    fields = ["id", "name", "race", "role", "locations", "region", "affiliation",
-              "quest", "is_hostile", "becomes_hostile", "drops", "description",
-              "lore", "dialogue", "weakness", "resistance", "how_to_beat_tips"]
+    fields = [
+        "id",
+        "name",
+        "race",
+        "role",
+        "locations",
+        "region",
+        "affiliation",
+        "quest",
+        "is_hostile",
+        "becomes_hostile",
+        "drops",
+        "description",
+        "lore",
+        "dialogue",
+        "weakness",
+        "resistance",
+        "how_to_beat_tips",
+    ]
     values = client.hmget(f"npc:{entry_id}", fields)
     return {k: v for k, v in zip(fields, values) if v}
 
@@ -83,17 +97,21 @@ def get_entry(entry_id):
 def print_results(results, show_description=True):
     """Pretty print search results."""
     for i, doc in enumerate(results, 1):
-        score = getattr(doc, 'score', None)
+        score = getattr(doc, "score", None)
         score_str = f" (similarity: {1 - float(score):.2f})" if score else ""
         print(f"\n{i}. {doc.name}{score_str}")
         print(f"   Type: {doc.race} | Role: {doc.role} | Region: {doc.region}")
-        if show_description and hasattr(doc, 'description'):
-            desc = doc.description[:150] + "..." if len(doc.description) > 150 else doc.description
+        if show_description and hasattr(doc, "description"):
+            desc = (
+                doc.description[:150] + "..."
+                if len(doc.description) > 150
+                else doc.description
+            )
             print(f"   {desc}")
 
 
-# --- Example Queries ---
-if __name__ == "__main__":
+def main():
+    """Run example queries to demonstrate the database."""
     print("=" * 60)
     print("CLAIR OBSCUR: EXPEDITION 33 - VECTOR DATABASE")
     print("=" * 60)
@@ -135,3 +153,7 @@ if __name__ == "__main__":
     results = filter_search("@race:{Secret}")
     for doc in results:
         print(f"  - {doc.name}")
+
+
+if __name__ == "__main__":
+    main()

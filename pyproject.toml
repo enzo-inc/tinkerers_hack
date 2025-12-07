@@ -24,6 +24,7 @@ dependencies = [
 [project.scripts]
 game-state = "game_state_agent.main:main"
 voice-agent = "voice_agent.main:main"
+query-npcs = "query_npcs:main"
 
 [build-system]
 requires = ["hatchling"]

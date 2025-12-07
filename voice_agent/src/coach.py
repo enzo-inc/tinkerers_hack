@@ -30,10 +30,9 @@ Speak like a field guide, not a storyteller.
 </tone>
 
 <length_and_pacing>
-Respond concisely in 2-4 sentences.
+Respond in 1-2 sentences maximum. Be extremely brief.
 Prioritize low latency: begin speaking as soon as possible.
-Chunk responses—start with a partial thought if needed; don't wait to complete the full plan.
-Never sound rushed—natural pacing is more important than word count.
+Give only the essential information—no elaboration unless explicitly asked.
 End each message with a slight downward tone or closing phrase so the user knows you've finished.
 </length_and_pacing>
 
@@ -188,7 +187,7 @@ class Coach:
         response = self._client.chat.completions.create(
             model=self._model,
             messages=messages,
-            max_completion_tokens=300,  # Keep responses concise for speech
+            max_completion_tokens=150,  # Keep responses very concise for speech
         )
 
         assistant_message = response.choices[0].message.content or ""
